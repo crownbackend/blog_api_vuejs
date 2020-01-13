@@ -8,6 +8,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+/**
+ * @Route("/api")
+ * Class HomeController
+ * @package App\Controller
+ */
 class HomeController extends AbstractController
 {
     /**
@@ -27,6 +32,7 @@ class HomeController extends AbstractController
                 'description' => $article->getDescription(),
                 'image_name' => $article->getImageName(),
                 'published' => $article->getPublished(),
+                'created_at' => $article->getCreatedAt(),
                 'category' => [
                     'id' => $article->getCategory()->getId(),
                     'name' => $article->getCategory()->getName()
@@ -34,9 +40,6 @@ class HomeController extends AbstractController
             ];
         }
 
-        $response = new JsonResponse($data, Response::HTTP_OK);
-        $response->headers->set('Access-Control-Allow-Origin', '*');
-
-        return $response;
+        return new JsonResponse($data, Response::HTTP_OK);
     }
 }

@@ -15,7 +15,7 @@ class AppFixtures extends Fixture
         $category->setName('catégorie d\'un article');
         $manager->persist($category);
 
-        for ($i = 0; $i < 20; $i++) {
+        for ($i = 1; $i < 20; $i++) {
             $article = new Article();
             $article->setTitle('Titre nuémro : '.$i)
             ->setDescription('Professionally disintermediate cooperative experiences without scalable ROI. Holisticly benchmark backward-compatible ROI vis-a-vis premium processes. Uniquely procrastinate diverse services for cooperative bandwidth. Progressively mesh stand-alone infrastructures before
@@ -25,6 +25,7 @@ class AppFixtures extends Fixture
              Professionally pursue focused applications whereas excellent'.$i.' e-commerce. Monotonectally aggregate effective initiatives whereas compelling'.$i)
             ->setImageName('https://al-houria.com//images/ohter_images/5b66ddbb075ce418517548.jpeg')
             ->setPublished(true)
+            ->setCreatedAt(new \DateTime())
             ->setCategory($category);
             $manager->persist($article);
         }

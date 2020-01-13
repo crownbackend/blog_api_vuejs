@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Form\UserType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,6 +11,11 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+/**
+ * @Route("/api")
+ * Class RegisterController
+ * @package App\Controller
+ */
 class RegisterController extends AbstractController
 {
     /**
@@ -35,7 +39,7 @@ class RegisterController extends AbstractController
             foreach ($errors as $violation) {
                 $messages[$violation->getPropertyPath()][] = $violation->getMessage();
             }
-            return new JsonResponse($messages);
+            return $this->json($messages);
         } else {
             $em = $this->getDoctrine()->getManager();
             $em->persist($user);
