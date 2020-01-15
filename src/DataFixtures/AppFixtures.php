@@ -23,7 +23,7 @@ class AppFixtures extends Fixture
              customer service after corporate content.Assertively parallel'.$i.' task standardized initiatives 
              rather than cross-media products. Conveniently engage empowered'.$i.' deliverables via bricks-and-clicks interfaces. 
              Professionally pursue focused applications whereas excellent'.$i.' e-commerce. Monotonectally aggregate effective initiatives whereas compelling'.$i)
-            ->setImageName('https://al-houria.com//images/ohter_images/5b66ddbb075ce418517548.jpeg')
+            ->setImageName('https://i.picsum.photos/id/543/500/300.jpg')
             ->setPublished(true)
             ->setCreatedAt(new \DateTime())
             ->setCategory($category);
