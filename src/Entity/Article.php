@@ -46,6 +46,11 @@ class Article
      */
     private $createdAt;
 
+    public function __construct()
+    {
+        $this->createdAt = new \DateTime();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -75,12 +80,12 @@ class Article
         return $this;
     }
 
-    public function getImageName(): ?string
+    public function getImageName()
     {
         return $this->image_name;
     }
 
-    public function setImageName(string $image_name): self
+    public function setImageName($image_name)
     {
         $this->image_name = $image_name;
 
