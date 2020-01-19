@@ -8,6 +8,7 @@ use App\Repository\CategoryRepository;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,7 +35,7 @@ class AdminArticleController extends AbstractController
         $role = $JWTEncoder->decode($token);
         if($role['roles']['0'] == 'ROLE_ADMIN') {
             // get all articles
-            $articles = $articleRepository->findBy(['Published' => true]);
+            $articles = $articleRepository->findBy(['Published' => true], ['id' => "DESC"]);
             $data = [];
             foreach ($articles as $article) {
                 $data[] = [
@@ -52,7 +53,40 @@ class AdminArticleController extends AbstractController
             }
             return $this->json($data, Response::HTTP_OK);
         } else {
-            return $this->json('interdit', Response::HTTP_FORBIDDEN);
+            return $this->json('accès non autorisé', Response::HTTP_FORBIDDEN);
+        }
+    }
+
+    /**
+     * @Route("/article/{id}", name="admin_article_show", methods={"GET"})
+     * @param Request $request
+     * @param JWTEncoderInterface $JWTEncoder
+     * @param int $id
+     * @param ArticleRepository $articleRepository
+     * @return JsonResponse
+     * @throws JWTDecodeFailureException
+     */
+    public function show(Request $request, JWTEncoderInterface $JWTEncoder, int $id, ArticleRepository $articleRepository): JsonResponse
+    {$token = $request->headers->get('authorization');
+        $role = $JWTEncoder->decode($token);
+        if($role['roles']['0'] == 'ROLE_ADMIN') {
+            $article = $articleRepository->findOneBy(['id' => (int)$id]);
+            $data = [
+                'id' => $article->getId(),
+                'title' => $article->getTitle(),
+                'description' => $article->getDescription(),
+                'created_at' => $article->getCreatedAt(),
+                'image_name' => $article->getImageName(),
+                'published' => $article->getPublished(),
+                'category' => [
+                    'id' => $article->getCategory()->getId(),
+                    'name' => $article->getCategory()->getName()
+                ]
+            ];
+
+            return $this->json($data, Response::HTTP_OK);
+        } else {
+            return $this->json('accès non autorisé', Response::HTTP_FORBIDDEN);
         }
     }
 
@@ -97,7 +131,12 @@ class AdminArticleController extends AbstractController
             $em->flush();
             return $this->json(['created' => 1], Response::HTTP_CREATED);
         } else {
-            return $this->json('interdit', Response::HTTP_FORBIDDEN);
+            return $this->json('accès non autorisé', Response::HTTP_FORBIDDEN);
         }
+    }
+
+    public function edit()
+    {
+
     }
 }

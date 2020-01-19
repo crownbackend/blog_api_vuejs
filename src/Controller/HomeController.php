@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Repository\ArticleRepository;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,7 +23,7 @@ class HomeController extends AbstractController
     public function home(ArticleRepository $articleRepository): JsonResponse
     {
         // get all articles
-        $articles = $articleRepository->findBy(['Published' => true]);
+        $articles = $articleRepository->findBy(['Published' => true], ['id' => "DESC"]);
         $data = [];
         foreach ($articles as $article) {
             $data[] = [

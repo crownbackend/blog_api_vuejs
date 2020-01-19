@@ -27,8 +27,8 @@ class AdminCategoryController extends AbstractController
      */
     public function category(Request $request, JWTEncoderInterface $JWTEncoder, CategoryRepository $categoryRepository): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        $role = $JWTEncoder->decode($data['authorization']);
+        $token = $request->headers->get('authorization');
+        $role = $JWTEncoder->decode($token);
         if($role['roles']['0'] == 'ROLE_ADMIN') {
             $data = [];
             $categories = $categoryRepository->findAll();
@@ -40,7 +40,7 @@ class AdminCategoryController extends AbstractController
             }
             return $this->json($data, Response::HTTP_OK);
         } else {
-            return $this->json('interdit', Response::HTTP_FORBIDDEN);
+            return $this->json('accès non autorisé', Response::HTTP_FORBIDDEN);
         }
     }
 }
