@@ -61,26 +61,28 @@ class AdminArticleController extends AbstractController
      * @Route("/article/{id}", name="admin_article_show", methods={"GET"})
      * @param Request $request
      * @param JWTEncoderInterface $JWTEncoder
-     * @param int $id
+     * @param Article $article
      * @param ArticleRepository $articleRepository
      * @return JsonResponse
      * @throws JWTDecodeFailureException
      */
-    public function show(Request $request, JWTEncoderInterface $JWTEncoder, int $id, ArticleRepository $articleRepository): JsonResponse
-    {$token = $request->headers->get('authorization');
+    public function show(Request $request, JWTEncoderInterface $JWTEncoder,
+                         Article $article, ArticleRepository $articleRepository): JsonResponse
+    {
+        $token = $request->headers->get('authorization');
         $role = $JWTEncoder->decode($token);
         if($role['roles']['0'] == 'ROLE_ADMIN') {
-            $article = $articleRepository->findOneBy(['id' => (int)$id]);
+            $articleRes = $articleRepository->find($article);
             $data = [
-                'id' => $article->getId(),
-                'title' => $article->getTitle(),
-                'description' => $article->getDescription(),
-                'created_at' => $article->getCreatedAt(),
-                'image_name' => $article->getImageName(),
-                'published' => $article->getPublished(),
+                'id' => $articleRes->getId(),
+                'title' => $articleRes->getTitle(),
+                'description' => $articleRes->getDescription(),
+                'created_at' => $articleRes->getCreatedAt(),
+                'image_name' => $articleRes->getImageName(),
+                'published' => $articleRes->getPublished(),
                 'category' => [
-                    'id' => $article->getCategory()->getId(),
-                    'name' => $article->getCategory()->getName()
+                    'id' => $articleRes->getCategory()->getId(),
+                    'name' => $articleRes->getCategory()->getName()
                 ]
             ];
 
@@ -98,7 +100,8 @@ class AdminArticleController extends AbstractController
      * @return JsonResponse
      * @throws JWTDecodeFailureException
      */
-    public function new(Request $request, JWTEncoderInterface $JWTEncoder, CategoryRepository $categoryRepository): JsonResponse
+    public function new(Request $request, JWTEncoderInterface $JWTEncoder,
+                        CategoryRepository $categoryRepository): JsonResponse
     {
         $em = $this->getDoctrine()->getManager();
         $role = $JWTEncoder->decode($request->request->get('authorization'));
@@ -135,8 +138,27 @@ class AdminArticleController extends AbstractController
         }
     }
 
-    public function edit()
+    /**
+     * @Route("/article/{id}", name="admin_edit_article", methods={"PUT"})
+     * @param Request $request
+     * @param ArticleRepository $articleRepository
+     * @param JWTEncoderInterface $JWTEncoder
+     * @param Article $article
+     * @return JsonResponse
+     * @throws JWTDecodeFailureException
+     */
+    public function edit(Request $request, ArticleRepository $articleRepository, JWTEncoderInterface $JWTEncoder, Article $article)
     {
-
+        $em = $this->getDoctrine()->getManager();
+        return $this->json($request->headers->get('authorization'));
+        $token = $request->headers->get('authorization');
+        $role = $JWTEncoder->decode($token);
+        if($role['roles']['0'] == 'ROLE_ADMIN') {
+            $articleRes = $articleRepository->find($article);
+            $em->flush();
+            return $this->json(['updated' => 1], Response::HTTP_OK);
+        } else {
+            return $this->json('accès non autorisé', Response::HTTP_FORBIDDEN);
+        }
     }
 }
