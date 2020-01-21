@@ -61,28 +61,28 @@ class AdminArticleController extends AbstractController
      * @Route("/article/{id}", name="admin_article_show", methods={"GET"})
      * @param Request $request
      * @param JWTEncoderInterface $JWTEncoder
-     * @param Article $article
+     * @param int $id
      * @param ArticleRepository $articleRepository
      * @return JsonResponse
      * @throws JWTDecodeFailureException
      */
     public function show(Request $request, JWTEncoderInterface $JWTEncoder,
-                         Article $article, ArticleRepository $articleRepository): JsonResponse
+                         int $id, ArticleRepository $articleRepository): JsonResponse
     {
         $token = $request->headers->get('authorization');
         $role = $JWTEncoder->decode($token);
         if($role['roles']['0'] == 'ROLE_ADMIN') {
-            $articleRes = $articleRepository->find($article);
+            $article = $articleRepository->findOneBy(["id" => (int)$id]);
             $data = [
-                'id' => $articleRes->getId(),
-                'title' => $articleRes->getTitle(),
-                'description' => $articleRes->getDescription(),
-                'created_at' => $articleRes->getCreatedAt(),
-                'image_name' => $articleRes->getImageName(),
-                'published' => $articleRes->getPublished(),
+                'id' => $article->getId(),
+                'title' => $article->getTitle(),
+                'description' => $article->getDescription(),
+                'created_at' => $article->getCreatedAt(),
+                'image_name' => $article->getImageName(),
+                'published' => $article->getPublished(),
                 'category' => [
-                    'id' => $articleRes->getCategory()->getId(),
-                    'name' => $articleRes->getCategory()->getName()
+                    'id' => $article->getCategory()->getId(),
+                    'name' => $article->getCategory()->getName()
                 ]
             ];
 
@@ -108,22 +108,8 @@ class AdminArticleController extends AbstractController
         if($role['roles']['0'] == 'ROLE_ADMIN') {
             $article = new Article();
             $imageFile = $request->files->get('image');
-            if($imageFile) {
-                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename = transliterator_transliterate('Any-Latin; Latin-ASCII; [^A-Za-z0-9_] remove; Lower()', $originalFilename);
-                $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
 
-                try {
-                    $imageFile->move(
-                        $this->getParameter('images_directory'),
-                        $newFilename
-                    );
-                } catch (FileException $e) {
-                    return $this->json($e->getMessage());
-                }
-                $baseurl = $request->getScheme() . '://' . $request->getHttpHost() . $request->getBasePath();
-                $article->setImageName($baseurl.'/uploads/images/'.$newFilename);
-            }
+            $this->upload($imageFile, $request, $article);
 
             $category = $categoryRepository->findOneBy(['id' => $request->request->get('category')]);
             $article->setTitle($request->request->get('title'));
@@ -143,22 +129,53 @@ class AdminArticleController extends AbstractController
      * @param Request $request
      * @param ArticleRepository $articleRepository
      * @param JWTEncoderInterface $JWTEncoder
-     * @param Article $article
+     * @param int $id
+     * @param CategoryRepository $categoryRepository
      * @return JsonResponse
      * @throws JWTDecodeFailureException
      */
-    public function edit(Request $request, ArticleRepository $articleRepository, JWTEncoderInterface $JWTEncoder, Article $article)
+    public function edit(Request $request, ArticleRepository $articleRepository,
+                         JWTEncoderInterface $JWTEncoder, int $id, CategoryRepository $categoryRepository)
     {
         $em = $this->getDoctrine()->getManager();
         return $this->json($request->headers->get('authorization'));
         $token = $request->headers->get('authorization');
         $role = $JWTEncoder->decode($token);
         if($role['roles']['0'] == 'ROLE_ADMIN') {
-            $articleRes = $articleRepository->find($article);
+            $article = $articleRepository->findOneBy(["id" => (int)$id]);
+            $imageFile = $request->files->get('image');
+            $this->upload($imageFile, $request, $article);
+
+            $category = $categoryRepository->findOneBy(['id' => $request->request->get('category')]);
+            $article->setTitle($request->request->get('title'));
+            $article->setDescription($request->request->get('description'));
+            $article->setPublished((int)$request->request->get('published'));
+            $article->setCategory($category);
+            $em->persist($article);
             $em->flush();
             return $this->json(['updated' => 1], Response::HTTP_OK);
         } else {
             return $this->json('accès non autorisé', Response::HTTP_FORBIDDEN);
+        }
+    }
+
+    private function upload($imageFile, Request $request, Article $article)
+    {
+        if($imageFile) {
+            $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeFilename = transliterator_transliterate('Any-Latin; Latin-ASCII; [^A-Za-z0-9_] remove; Lower()', $originalFilename);
+            $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
+
+            try {
+                $imageFile->move(
+                    $this->getParameter('images_directory'),
+                    $newFilename
+                );
+            } catch (FileException $e) {
+                return $this->json($e->getMessage());
+            }
+            $baseurl = $request->getScheme() . '://' . $request->getHttpHost() . $request->getBasePath();
+            $article->setImageName($baseurl.'/uploads/images/'.$newFilename);
         }
     }
 }
