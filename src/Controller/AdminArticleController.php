@@ -73,20 +73,20 @@ class AdminArticleController extends AbstractController
         $role = $JWTEncoder->decode($token);
         if($role['roles']['0'] == 'ROLE_ADMIN') {
             $article = $articleRepository->findOneBy(["id" => (int)$id]);
-            $data = [
-                'id' => $article->getId(),
-                'title' => $article->getTitle(),
-                'description' => $article->getDescription(),
-                'created_at' => $article->getCreatedAt(),
-                'image_name' => $article->getImageName(),
-                'published' => $article->getPublished(),
-                'category' => [
-                    'id' => $article->getCategory()->getId(),
-                    'name' => $article->getCategory()->getName()
-                ]
-            ];
+//            $data = [
+//                'id' => $article->getId(),
+//                'title' => $article->getTitle(),
+//                'description' => $article->getDescription(),
+//                'created_at' => $article->getCreatedAt(),
+//                'image_name' => $article->getImageName(),
+//                'published' => $article->getPublished(),
+//                'category' => [
+//                    'id' => $article->getCategory()->getId(),
+//                    'name' => $article->getCategory()->getName()
+//                ]
+//            ];
 
-            return $this->json($data, Response::HTTP_OK);
+            return $this->json($article, Response::HTTP_OK, [], ["groups" => "article"]);
         } else {
             return $this->json('accès non autorisé', Response::HTTP_FORBIDDEN);
         }
@@ -107,9 +107,7 @@ class AdminArticleController extends AbstractController
         $role = $JWTEncoder->decode($request->request->get('authorization'));
         if($role['roles']['0'] == 'ROLE_ADMIN') {
             $article = new Article();
-            $imageFile = $request->files->get('image');
-
-            $this->upload($imageFile, $request, $article);
+            $this->upload($request, $article);
 
             $category = $categoryRepository->findOneBy(['id' => $request->request->get('category')]);
             $article->setTitle($request->request->get('title'));
@@ -138,13 +136,12 @@ class AdminArticleController extends AbstractController
                          JWTEncoderInterface $JWTEncoder, int $id, CategoryRepository $categoryRepository)
     {
         $em = $this->getDoctrine()->getManager();
-        return $this->json($request->headers->get('authorization'));
+        return $this->json($request);
         $token = $request->headers->get('authorization');
         $role = $JWTEncoder->decode($token);
         if($role['roles']['0'] == 'ROLE_ADMIN') {
             $article = $articleRepository->findOneBy(["id" => (int)$id]);
-            $imageFile = $request->files->get('image');
-            $this->upload($imageFile, $request, $article);
+            $this->upload($request, $article);
 
             $category = $categoryRepository->findOneBy(['id' => $request->request->get('category')]);
             $article->setTitle($request->request->get('title'));
@@ -159,8 +156,9 @@ class AdminArticleController extends AbstractController
         }
     }
 
-    private function upload($imageFile, Request $request, Article $article)
+    private function upload(Request $request, Article $article)
     {
+        $imageFile = $request->files->get('image');
         if($imageFile) {
             $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
             $safeFilename = transliterator_transliterate('Any-Latin; Latin-ASCII; [^A-Za-z0-9_] remove; Lower()', $originalFilename);

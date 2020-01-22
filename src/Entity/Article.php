@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ArticleRepository")
@@ -10,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 class Article
 {
     /**
+     * @Groups("article")
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
@@ -17,31 +19,37 @@ class Article
     private $id;
 
     /**
+     * @Groups("article")
      * @ORM\Column(type="string", length=255)
      */
     private $title;
 
     /**
+     * @Groups("article")
      * @ORM\Column(type="text")
      */
     private $description;
 
     /**
+     * @Groups("article")
      * @ORM\Column(type="string", length=255)
      */
     private $image_name;
 
     /**
+     * @Groups("article")
      * @ORM\Column(type="boolean")
      */
     private $Published;
 
     /**
+     * @Groups("article")
      * @ORM\ManyToOne(targetEntity="App\Entity\Category", inversedBy="articles")
      */
     private $category;
 
     /**
+     * @Groups("article")
      * @ORM\Column(type="datetime")
      */
     private $createdAt;
