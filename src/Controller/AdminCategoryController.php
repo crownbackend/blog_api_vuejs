@@ -30,15 +30,8 @@ class AdminCategoryController extends AbstractController
         $token = $request->headers->get('authorization');
         $role = $JWTEncoder->decode($token);
         if($role['roles']['0'] == 'ROLE_ADMIN') {
-            $data = [];
             $categories = $categoryRepository->findAll();
-            foreach ($categories as $category) {
-                $data[] = [
-                    'id' => $category->getId(),
-                    'name' => $category->getName()
-                ];
-            }
-            return $this->json($data, Response::HTTP_OK);
+            return $this->json($categories, Response::HTTP_OK, [], ["groups" => "category"]);
         } else {
             return $this->json('accès non autorisé', Response::HTTP_FORBIDDEN);
         }

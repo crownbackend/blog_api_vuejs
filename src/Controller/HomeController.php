@@ -23,23 +23,7 @@ class HomeController extends AbstractController
     public function home(ArticleRepository $articleRepository): JsonResponse
     {
         // get all articles
-        $articles = $articleRepository->findBy(['Published' => true], ['id' => "DESC"]);
-        $data = [];
-        foreach ($articles as $article) {
-            $data[] = [
-                'id' => $article->getId(),
-                'title' => $article->getTitle(),
-                'description' => $article->getDescription(),
-                'image_name' => $article->getImageName(),
-                'published' => $article->getPublished(),
-                'created_at' => $article->getCreatedAt(),
-                'category' => [
-                    'id' => $article->getCategory()->getId(),
-                    'name' => $article->getCategory()->getName()
-                ]
-            ];
-        }
-
-        return new JsonResponse($data, Response::HTTP_OK);
+        $articles = $articleRepository->findBy(['Published' => 1], ['id' => "DESC"]);
+        return $this->json($articles, Response::HTTP_OK, [], ["groups" => "article"]);
     }
 }

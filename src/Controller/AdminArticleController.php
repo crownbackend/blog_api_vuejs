@@ -29,29 +29,15 @@ class AdminArticleController extends AbstractController
      * @return JsonResponse
      * @throws JWTDecodeFailureException
      */
-    public function index(ArticleRepository $articleRepository, JWTEncoderInterface $JWTEncoder, Request $request): JsonResponse
+    public function index(ArticleRepository $articleRepository,
+                          JWTEncoderInterface $JWTEncoder, Request $request): JsonResponse
     {
         $token = $request->headers->get('authorization');
         $role = $JWTEncoder->decode($token);
         if($role['roles']['0'] == 'ROLE_ADMIN') {
             // get all articles
-            $articles = $articleRepository->findBy(['Published' => true], ['id' => "DESC"]);
-            $data = [];
-            foreach ($articles as $article) {
-                $data[] = [
-                    'id' => $article->getId(),
-                    'title' => $article->getTitle(),
-                    'description' => $article->getDescription(),
-                    'image_name' => $article->getImageName(),
-                    'published' => $article->getPublished(),
-                    'created_at' => $article->getCreatedAt(),
-                    'category' => [
-                        'id' => $article->getCategory()->getId(),
-                        'name' => $article->getCategory()->getName()
-                    ]
-                ];
-            }
-            return $this->json($data, Response::HTTP_OK);
+            $articles = $articleRepository->findBy([], ['createdAt' => "DESC"]);
+            return $this->json($articles, Response::HTTP_OK, [], ["groups" => "article"]);
         } else {
             return $this->json('accès non autorisé', Response::HTTP_FORBIDDEN);
         }
@@ -73,19 +59,6 @@ class AdminArticleController extends AbstractController
         $role = $JWTEncoder->decode($token);
         if($role['roles']['0'] == 'ROLE_ADMIN') {
             $article = $articleRepository->findOneBy(["id" => (int)$id]);
-//            $data = [
-//                'id' => $article->getId(),
-//                'title' => $article->getTitle(),
-//                'description' => $article->getDescription(),
-//                'created_at' => $article->getCreatedAt(),
-//                'image_name' => $article->getImageName(),
-//                'published' => $article->getPublished(),
-//                'category' => [
-//                    'id' => $article->getCategory()->getId(),
-//                    'name' => $article->getCategory()->getName()
-//                ]
-//            ];
-
             return $this->json($article, Response::HTTP_OK, [], ["groups" => "article"]);
         } else {
             return $this->json('accès non autorisé', Response::HTTP_FORBIDDEN);
@@ -133,10 +106,9 @@ class AdminArticleController extends AbstractController
      * @throws JWTDecodeFailureException
      */
     public function edit(Request $request, ArticleRepository $articleRepository,
-                         JWTEncoderInterface $JWTEncoder, int $id, CategoryRepository $categoryRepository)
+                         JWTEncoderInterface $JWTEncoder, int $id, CategoryRepository $categoryRepository): JsonResponse
     {
         $em = $this->getDoctrine()->getManager();
-        return $this->json($request);
         $token = $request->headers->get('authorization');
         $role = $JWTEncoder->decode($token);
         if($role['roles']['0'] == 'ROLE_ADMIN') {
@@ -151,6 +123,31 @@ class AdminArticleController extends AbstractController
             $em->persist($article);
             $em->flush();
             return $this->json(['updated' => 1], Response::HTTP_OK);
+        } else {
+            return $this->json('accès non autorisé', Response::HTTP_FORBIDDEN);
+        }
+    }
+
+    /**
+     * @Route("/article/{id}", name="admin_edit_delete", methods={"DELETE"})
+     * @param Request $request
+     * @param int $id
+     * @param ArticleRepository $articleRepository
+     * @param JWTEncoderInterface $JWTEncoder
+     * @return JsonResponse
+     * @throws JWTDecodeFailureException
+     */
+    public function delete(Request $request, int $id,
+                           ArticleRepository $articleRepository, JWTEncoderInterface $JWTEncoder): JsonResponse
+    {
+        $em = $this->getDoctrine()->getManager();
+        $token = $request->headers->get('authorization');
+        $role = $JWTEncoder->decode($token);
+        if($role['roles']['0'] == 'ROLE_ADMIN') {
+            $article = $articleRepository->findOneBy(["id" => (int)$id]);
+            $em->remove($article);
+            $em->flush();
+            return $this->json(['delete' => 1], Response::HTTP_NO_CONTENT);
         } else {
             return $this->json('accès non autorisé', Response::HTTP_FORBIDDEN);
         }
